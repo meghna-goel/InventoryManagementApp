@@ -1,26 +1,57 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from 'react';
+import { Route, Switch, Redirect } from "react-router-dom";
+import { connect } from "react-redux";
+import { ConnectedRouter } from "connected-react-router";
+import { history } from "./store"
+import Routes from "./routes/routes"
+import { LOGIN, WELCOME } from './routes/constant';
 
-function App() {
+const PrivateRoute = ({ component: Component, isProtected, ...rest }) => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Route
+      {...rest}
+      render={props => {
+        return isProtected === true && localStorage.getItem("access_token") ? (
+          <>
+            <Component {...props} />
+          </>
+        ) : (
+            <Redirect to={LOGIN} />
+          );
+      }}
+    />
   );
+};
+
+class App extends Component {
+  constructor(props){
+    super(props);
+    this.state = {
+
+    }
+  }
+
+  render() {
+    return (
+      <ConnectedRouter history={history}>
+        <div>
+          <Switch>
+            {Routes.map((route, i) => {
+              if (route.isProtected === true)
+                return <PrivateRoute key={i} {...route} />
+              else
+                return <Route key={i} {...route} />
+            })}
+            ?<Redirect exact from={WELCOME} to={LOGIN} />
+          </Switch>
+        </div>
+      </ConnectedRouter>
+    );
+  }
 }
 
-export default App;
+const mapStateToProps = state => {
+ 
+};
+
+export default connect(mapStateToProps)(App);
